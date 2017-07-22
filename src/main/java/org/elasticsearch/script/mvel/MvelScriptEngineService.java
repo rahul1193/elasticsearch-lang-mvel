@@ -26,10 +26,7 @@ import org.elasticsearch.common.component.AbstractComponent;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.math.UnboxedMathUtils;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.script.CompiledScript;
-import org.elasticsearch.script.ExecutableScript;
-import org.elasticsearch.script.ScriptEngineService;
-import org.elasticsearch.script.SearchScript;
+import org.elasticsearch.script.*;
 import org.elasticsearch.search.lookup.SearchLookup;
 import org.mvel2.MVEL;
 import org.mvel2.ParserConfiguration;
@@ -174,6 +171,7 @@ public class MvelScriptEngineService extends AbstractComponent implements Script
         @Override
         public void setScorer(Scorer scorer) {
             this.scorer = scorer;
+            resolver.createVariable("_score", new ScoreAccessor(scorer));
         }
 
         @Override
@@ -198,13 +196,6 @@ public class MvelScriptEngineService extends AbstractComponent implements Script
 
         @Override
         public Object run() {
-            try {
-                if (scorer != null) {
-                    resolver.createVariable("_score", scorer.score());
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Could not get score", e);
-            }
             return script.getValue(null, resolver);
         }
 
